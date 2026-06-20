@@ -1,0 +1,20 @@
+{
+  "name": "ip-multiviewer-docs",
+  "private": true,
+  "description": "IP MultiViewer production operations documentation for Windows desktop monitoring, optional server sync, alerts, notifications, and secure stream handling.",
+  "scripts": {
+    "docs:dev": "vitepress dev docs --host 127.0.0.1",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --host 127.0.0.1",
+    "docs:check": "vitepress build docs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "vite": "6.4.3",
+    "vitepress": "1.6.4"
+  },
+  "overrides": {
+    "esbuild": "0.25.12",
+    "vite": "6.4.3"
+  }
+}
