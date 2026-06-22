@@ -26,9 +26,18 @@ Start は、現在選んでいるレイアウトに入っている stream だけ
 | status badge | standby、starting、playing、error など |
 | alert overlay | open / acknowledged / snoozed のalertを上部に表示 |
 | status frame | severity に応じて黄色または赤系で表示 |
+| audio meter | Audio monitorが有効なstreamの音量とpeak |
 | placeholder | stream未割り当て、停止中、再生不可の理由 |
 
 未再生のタイルは正常映像ではなく、standby や playback stopped として扱います。手動Stop直後や起動直後の未再生状態だけで `video.no_signal` を出さないためです。
+
+status badge は、入力を読んでいるかだけでなく、映像フレームが実際に表示されたかも反映します。最初のフレームがまだ出ていない場合は `rendering`、表示済み映像が古い場合は `video age`、FFmpeg描画が遅れている場合は `render` の値を確認します。
+
+## Audio meterの見方
+
+Audio monitorが有効なstreamでは、タイルの左右にVUメーター形式のレベル表示が出ます。緑は通常域、黄は大きめの入力、赤は0 dBFSに近い過大入力の目安です。
+
+塗りの高さはRMS相当の音量、細い線はPeakを示します。複数channelがある入力ではchannelごとに表示されるため、片channelだけ無音、片channelだけclipに近い、といった異常を見分けられます。
 
 ## タイルの割り当て
 

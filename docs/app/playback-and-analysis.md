@@ -22,13 +22,21 @@ SRTは接続モードの違いで失敗しやすいため、FFmpeg再生では `
 
 SRTや解析を安定させたい端末では、FFmpegをインストールし、`ffmpeg -version` が通る状態にしてください。
 
+## 低遅延再生と表示状態
+
+Desktop は監視画面での遅れを減らすため、再生backendに低遅延向けのcache設定を使います。LibVLC は network / live / file cache を短くし、FFmpeg再生は入力解析を短くして最新フレームを優先します。
+
+FFmpegで再生できるstreamは、再生用のフレームと解析用の値を同じ処理から受け取ります。これにより、SRTなどで再生と解析が別々に接続して負荷や遅延が増えることを避けます。
+
+タイルのstatusは、入力を読み始めたかだけでなく、実際に映像フレームが画面へ提示されたかも見ます。最初のフレームがまだ出ていない間は `rendering` として扱い、表示済み映像が古くなると `video age` や `render` の遅れをstatusに出します。
+
 ## 検知するalert
 
 | alert | 出る条件の例 |
 | --- | --- |
 | `video.no_signal` | 再生中に入力が止まった、進行が止まった |
 | `video.decode_error` | decoderや入力形式でエラーが起きた |
-| `video.black` | 画面の輝度が低く、暗いpixelの割合が高い状態が続いた |
+| `video.black` | 画面の輝度が低く、暗いpixelの割合が高いフレームを検知した |
 | `video.freeze` | フレーム差分が小さい状態が続いた |
 | `video.low_fps` | FPSが閾値を下回る状態が続いた |
 | `audio.channel_missing` | 音声trackを検出できない |
@@ -36,6 +44,8 @@ SRTや解析を安定させたい端末では、FFmpegをインストールし�
 | `audio.clipping` | peakが高く、クリッピング候補が多い |
 
 複数のalertは同時に出ることがあります。たとえば、映像が止まっていて音もない場合、`video.freeze` と `audio.silence` を別々に見ます。
+
+黒味検知は、継続秒数を待たず、黒味フレームを検知した時点で `video.black` を出します。誤検知を減らす場合は、黒味のdurationではなく、平均輝度、暗いpixelの明るさ、暗いpixelの割合を調整します。
 
 ## AnalysisとAudio monitor
 
@@ -49,6 +59,14 @@ SRTや解析を安定させたい端末では、FFmpegをインストールし�
 
 音声がないカメラにAudio monitorを有効にすると、無音alertが出続けることがあります。用途に合わせてstreamごとに切り替えてください。
 
+## 音声レベルメーター
+
+Audio monitor が有効なstreamでは、タイル上にVUメーター形式の音声レベルを表示します。縦の目盛りは `0 dBFS` から `-60 dBFS` までで、通常域は緑、注意域は黄、過大入力に近い領域は赤で見ます。
+
+メーターの塗りはRMS相当の音量、細いピーク表示は瞬間的なPeakを示します。複数channelがある入力ではchannelごとにメーターを分け、片側だけ無音、片側だけclipに近い、といった状態を見分けやすくします。
+
+表示は短い間隔で更新しつつ滑らかに補間します。メーターが動かない場合は、streamに音声trackがない、Audio monitorが無効、または入力側が無音の可能性があります。
+
 ## standbyと異常の違い
 
 アプリ起動直後、手動Stop後、未割り当てタイルは異常ではありません。この状態で `video.no_signal` を出すと、監視開始前からalertが溜まってしまうため、standby / playback stopped として表示します。
@@ -59,11 +77,11 @@ alertは、再生を開始したstreamが一定時間以上問題を示したと
 
 | 症状 | 調整 |
 | --- | --- |
-| 暗いシーンで黒画面alertが出る | Black durationを長くする、Dark pixel ratioを上げる |
+| 暗いシーンで黒画面alertが出る | Black lumaを下げる、Dark pixel lumaを下げる、Dark pixel ratioを上げる |
 | 静止画に近い映像でfreeze alertが出る | Freeze durationを長くする、Freeze diffを少し上げる |
 | 一時的なネットワーク揺れでno signalが出る | Input timeoutを長くする |
 | 音が小さいだけで無音になる | Silence dBFSを下げる |
-| alertが遅い | durationを短くする。ただし誤検知は増えます |
+| freeze、低FPS、無音alertが遅い | 対象のdurationを短くする。ただし誤検知は増えます |
 
 ## 復旧時の扱い
 

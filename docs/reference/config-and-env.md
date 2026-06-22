@@ -53,7 +53,7 @@ Import / Export でこの設定を移動できます。複数端末で共有す�
 | `black_threshold` | `0.04` | 平均輝度の黒判定 |
 | `black_pixel_threshold` | `0.04` | 暗いpixelの判定 |
 | `black_pixel_ratio_threshold` | `0.85` | 暗いpixelの割合 |
-| `min_black_duration_sec` | `3` | 黒画面alertまでの秒数 |
+| `min_black_duration_sec` | `0` | 互換用。Desktopは黒味を初回検知でalertし、この値は0として扱います |
 | `freeze_difference_threshold` | `0.015` | フレーム差分の停止判定 |
 | `min_freeze_duration_sec` | `5` | freeze alertまでの秒数 |
 | `min_freeze_frames` | `30` | freeze候補フレーム数 |

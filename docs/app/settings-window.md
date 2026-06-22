@@ -53,7 +53,6 @@ rtsp://user:<PASSWORD>@camera.example.com/live
 | Black luma | 画面の平均輝度がどれくらい低いと黒画面候補にするか |
 | Dark pixel luma | 暗いpixelと見なす明るさ |
 | Dark pixel ratio | 画面の何割が暗いと黒画面候補にするか |
-| Black duration sec | 黒画面候補が何秒続いたらalertにするか |
 | Freeze diff | フレーム差分がどれくらい小さいと停止候補にするか |
 | Freeze duration sec | 停止候補が何秒続いたらalertにするか |
 | Freeze frames | 何フレーム以上安定したら停止候補にするか |
@@ -64,7 +63,9 @@ rtsp://user:<PASSWORD>@camera.example.com/live
 | Silence duration sec | 無音が何秒続いたらalertにするか |
 | Clipping count | クリッピング検知のサンプル数 |
 
-まずは既定値で始めて、通知が多すぎる場合は duration を長くする、見逃しが多い場合は threshold を少し厳しくする、という順で調整します。
+黒味は初回検知でalertを出すため、Settingsでは黒味のdurationを調整しません。暗い映像で通知が多すぎる場合は、Black luma、Dark pixel luma、Dark pixel ratio を調整します。
+
+freeze、低FPS、無音は、まず既定値で始めて、通知が多すぎる場合は duration を長くする、見逃しが多い場合は threshold を少し厳しくする、という順で調整します。
 
 ## Status / Server sync
 
