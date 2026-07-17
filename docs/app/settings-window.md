@@ -1,6 +1,6 @@
 # Settings画面の使い方
 
-Settings は、映像、alert profile、server sync、layout、音声、設定ファイルを扱う画面です。変更した内容は `Save` で保存します。項目によっては `Apply` を押した時点で一部反映されますが、運用では最後に `Save` しておくと安全です。
+Settings は、映像、alert profile、server sync、layout、音声、設定ファイルを扱う画面です。現在は `Streams`、`Alert profiles`、`Sync and audio` の3タブに分かれています。変更した内容は `Save` で保存します。項目によっては `Apply` を押した時点で一部反映されますが、運用では最後に `Save` しておくと安全です。
 
 ## 上部ボタン
 
@@ -15,7 +15,7 @@ Import / Export した設定には映像URLやclient tokenが含まれる場合�
 
 ## Streams
 
-左側のStreams一覧でstreamを選ぶと、下部のSelected Streamで編集できます。
+`Streams`タブ左側の一覧でstreamを選ぶと、右側のSelected streamで編集できます。
 
 | 項目 | 説明 |
 | --- | --- |
@@ -46,7 +46,7 @@ rtsp://user:<PASSWORD>@camera.example.com/live
 
 ## Alert Profile Thresholds
 
-右上のAlert Profile Thresholdsでは、検知条件を調整します。
+`Alert profiles`タブでは、検知条件を映像、動き/FPS、音声のgroupごとに調整します。
 
 | 項目 | 目安 |
 | --- | --- |
@@ -67,9 +67,9 @@ rtsp://user:<PASSWORD>@camera.example.com/live
 
 freeze、低FPS、無音は、まず既定値で始めて、通知が多すぎる場合は duration を長くする、見逃しが多い場合は threshold を少し厳しくする、という順で調整します。
 
-## Status / Server sync
+## Sync and audio
 
-右下のStatusでは、設定ファイル、alert summary、server sync、layout、音声設定を扱います。
+`Sync and audio`タブでは、server接続状態、layout、音声設定を扱います。設定ファイルpathとalert summaryは上部に常時表示されます。
 
 | 項目 | 説明 |
 | --- | --- |
@@ -87,13 +87,13 @@ Server sync を有効にする場合は、Server URL が `http://` または `ht
 
 ## 設定ファイルの場所
 
-既定の設定ファイルは次の場所です。
+既定の設定ファイルは正式版で1つです。
 
 ```text
 C:\ProgramData\IPMultiViewer\config\local-config.json
 ```
 
-このファイルにはstream URL、server URL、client token、alert履歴が含まれることがあります。バックアップや共有時は秘密情報の扱いに注意してください。
+preview版の`local-config.next.json`が正式configより新しい場合、正式版の初回起動時に内容を`local-config.json`へ昇格します。preview原本は変更・削除せず保持し、以後の保存先は`local-config.json`です。これらのファイルにはstream URL、server URL、client token、alert履歴が含まれることがあります。backupや共有時は秘密情報の扱いに注意してください。
 
 ## 変更後の確認
 

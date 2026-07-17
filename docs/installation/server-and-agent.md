@@ -26,6 +26,32 @@ IP MultiViewer は Desktop App 単体で使えます。Server と Agent は、�
 
 Release package は `ip-multiviewer_<version>_server_linux_x64.zip` または `ip-multiviewer_<version>_server_linux_arm64.zip` を使います。中には `ip-multiviewer-server`、`ip-multiviewer-agent`、systemd unit例、env例、Docker Compose例が入っています。
 
+## Release packageを取得して検証する
+
+`ip-multiviewer` repository では、tag `v*` のpushまたは GitHub Actions の手動実行で Server / Agent package を作成します。workflow は `.github/workflows/release-server.yml`、手元で同じpackageを作るscriptは `scripts/package-server.ps1` です。
+
+GitHub Release から取得する場合は、対象versionのassetから次をダウンロードします。
+
+- `ip-multiviewer_<version>_server_linux_x64.zip`
+- `ip-multiviewer_<version>_server_linux_x64.zip.sha256`
+- ARM64 hostでは `linux_arm64` のzipとsha256
+
+展開前にchecksumを確認します。
+
+```bash
+sha256sum -c ip-multiviewer_<version>_server_linux_x64.zip.sha256
+```
+
+GitHub Actions の手動実行で確認する場合は、`Server Release Packages` workflow を開き、`version` に `v1.2.3` のような値を入れて実行します。成功すると workflow artifact として `artifacts/server/*` 相当のzipとsha256が残ります。
+
+手元でpackageだけ作る場合は、`ip-multiviewer` repository root で次を実行します。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/package-server.ps1 -Version v0.0.0-local -Runtime linux-x64,linux-arm64 -OutputDir artifacts/server
+```
+
+作成後、`artifacts/server` にzipと `.sha256` があることを確認します。
+
 ## envで設定するもの
 
 | 項目 | 目的 |

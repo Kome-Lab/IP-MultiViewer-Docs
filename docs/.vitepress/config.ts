@@ -35,6 +35,14 @@ export default {
         ],
       },
       {
+        text: '開発・統合記録',
+        items: [
+          { text: 'UI全面改修の調査・正式統合', link: '/modernization/ui-modernization-investigation' },
+          { text: '機能互換性・統合結果', link: '/modernization/functional-parity-matrix' },
+          { text: 'API・イベント契約調査', link: '/modernization/api-and-event-inventory' },
+        ],
+      },
+      {
         text: '設定',
         items: [
           { text: '映像ソース設定', link: '/configuration/stream-sources' },

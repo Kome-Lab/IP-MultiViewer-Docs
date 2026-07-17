@@ -11,11 +11,27 @@
 5. 別のプレイヤーで同じ映像を開き、音が出るか確認します。
 6. 無音アラートの秒数が短すぎないか確認します。
 
-## VUメーターで見ること
+## VU / PEAKメーターで見ること
 
-Audio monitorが有効なstreamは、タイル上のVUメーターでRMS相当の音量とPeakを確認できます。緑が通常域、黄が大きめの入力、赤がclipに近い入力の目安です。
+現行UIの上部`METER`で、すべての表示streamを`VU`または`PEAK`に切り替えられます。
 
-メーターがまったく動かない場合は、音声trackがない、stream側が無音、Audio monitorが無効、または入力backendが音声サンプルを取得できていない可能性があります。片側だけ動かない場合は、入力channelの欠落や片channel無音を疑います。
+- `VU`: channelごとのRMS相当値を表示します。`0 VU = -18 dBFS`で、聴感上の大きさとchannel間バランスの確認向けです。
+- `PEAK`: channelごとのpeak値を`-60`〜`0 dBFS`で表示し、瞬間的な過大入力とclip余裕を確認します。
+
+どちらもチャンネルごとに独立して動きます。複数channelのうち1本だけ動かない場合は、入力channelの欠落や片channel無音を疑ってください。メーターがまったく動かない場合は、音声trackがない、stream側が無音、Audio monitorが無効、または入力backendが音声sampleを取得できていない可能性があります。
+
+現行UIは直近3秒以内の音声sampleがないメーターを非表示にします。再生中なのにメーターbank自体が消える場合は、ログを次の順で確認します。
+
+1. `C:\ProgramData\IPMultiViewer\logs\desktop.log`を開きます。
+2. 対象streamの再生backendが開始しているか確認します。
+3. Settingsの`Audio monitor`を有効にし、再生をいったんStop→Startします。
+4. 別プレイヤーや`ffprobe`でchannel数と音声trackを確認します。
+
+`VU`と`PEAK`を切り替えてもメーターが同じ高さに見える場合、定常信号では値が近くなることがあります。確認には音量変動のある入力を使い、上部の選択色と目盛りが変わることも確認してください。
+
+## 映像とメーターのタイミングが合わない
+
+現行UIのSRT/FFmpeg再生は、画面へ提示したvideo PTSとaudio levelのPTSを合わせます。映像より150msを超えて古いmeter値は一旦表示しません。大きくずれる場合は、古いreceiverが残っていないか確認するため、対象streamをStop→Startしてください。それでも再現する場合は、同じ入力を別プレイヤーで確認し、配信元のvideo/audio PTS自体にずれがないか切り分けます。FFmpegが`stats_enc_pre`に対応しない場合は`showinfo`へ自動fallbackして映像・meter・音声alertを継続しますが、負荷を下げるには新しいFFmpegを推奨します。
 
 ## 調整のコツ
 

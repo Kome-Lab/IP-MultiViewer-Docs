@@ -30,6 +30,26 @@ FFmpegで再生できるstreamは、再生用のフレームと解析用の値�
 
 タイルのstatusは、入力を読み始めたかだけでなく、実際に映像フレームが画面へ提示されたかも見ます。最初のフレームがまだ出ていない間は `rendering` として扱い、表示済み映像が古くなると `video age` や `render` の遅れをstatusに出します。
 
+## FFmpeg表示品質
+
+現行UIはreceiver開始時に、タイル数とDPI込みviewportに合わせてFFmpegの表示用frameを選びます。少ないタイルでは1画面あたりの細部を増やし、4x4では16streamを同時更新するときの処理量を抑えます。
+
+| Layout | 基準frame | 広い高DPI viewportでの上限 |
+| --- | --- | --- |
+| 2x2 | `960x540` | `1280x720` |
+| 3x3 | `640x360` | `960x540` |
+| 4x4 | `480x270` | `640x360` |
+
+変換はbicubic scaleを使い、入力映像の縦横比を保持します。出力枠と比率が合わない部分は黒で補い、映像を引き伸ばしません。再生中のlayout変更ではSRTを切断しないため既存sessionを維持し、新しいtargetは次のreceiver開始（Stop/Start）で適用します。targetは`DECODE / OUTPUT`のtooltipで確認できます。
+
+この適応解像度は現行UIのFFmpeg再生に適用します。元映像にない細部を生成する機能ではないため、入力自体が低解像度または低bitrateの場合は配信元の設定も確認してください。
+
+## GPU decodeの確認
+
+GPU packageはhardware decodeを要求しますが、要求したことと実際にGPUでdecodeできたことは別です。現行UIは、FFmpegのruntime logからhardware backendを示すevidenceを検出し、かつそのsessionのframeが画面へ提示された場合だけ、ヘッダーへ`GPU · D3D11VA`などと表示します。
+
+`D3D11VA · REQUESTED`、`DXVA2 · REQUESTED`、`AUTO · DETECTING`、`AUTO · UNKNOWN`、`LIBVLC · UNKNOWN`はGPU動作の確認済み表示ではありません。`WPF 960x540`などの`OUTPUT`は表示経路と表示用frameサイズであり、GPU decodeの証拠ではありません。表示中streamの状態が異なる場合は`MIXED`になり、tooltipでstreamごとのdecode/outputを確認できます。
+
 ## 検知するalert
 
 | alert | 出る条件の例 |
@@ -61,11 +81,13 @@ FFmpegで再生できるstreamは、再生用のフレームと解析用の値�
 
 ## 音声レベルメーター
 
-Audio monitor が有効なstreamでは、タイル上にVUメーター形式の音声レベルを表示します。縦の目盛りは `0 dBFS` から `-60 dBFS` までで、通常域は緑、注意域は黄、過大入力に近い領域は赤で見ます。
+Audio monitorが有効なstreamでは、タイル上にchannel別の音声レベルを表示します。上部`METER`で、RMS相当値を`-60`〜`+3 VU`へ写像するVU（`0 VU = -18 dBFS`）と、peak値を`-60`〜`0 dBFS`で見るPEAKを切り替えます。
 
-メーターの塗りはRMS相当の音量、細いピーク表示は瞬間的なPeakを示します。複数channelがある入力ではchannelごとにメーターを分け、片側だけ無音、片側だけclipに近い、といった状態を見分けやすくします。
+複数channelは別々に動き、片側だけ無音、片側だけclipに近い、といった状態を見分けられます。VUではpeak markerを隠し、PEAKでは表示します。
 
-表示は短い間隔で更新しつつ滑らかに補間します。メーターが動かない場合は、streamに音声trackがない、Audio monitorが無効、または入力側が無音の可能性があります。
+SRT/FFmpegでは、videoとaudioのPTSを別々に保持し、画面へ提示済みのvideo PTSを超えず、かつ150ms以内のaudio levelだけをmeterへ渡します。Peak/VUの立ち上がり・下降はPTS切替時に即時反映します。FFmpegから取り込むaudio metadataはchannel別RMS/Peakだけに限定し、複数stream時のCPU負荷と解析待ちを抑えます。video PTSが欠落した場合は最初の待機後に非待機へ切り替え、直近PTSから最大2秒を補間して映像fpsとmeterを維持します。`stats_enc_pre`非対応の旧FFmpegでは`showinfo`を使います。
+
+メーターが動かない場合は、streamに音声trackがない、Audio monitorが無効、または入力側が無音の可能性があります。
 
 ## standbyと異常の違い
 

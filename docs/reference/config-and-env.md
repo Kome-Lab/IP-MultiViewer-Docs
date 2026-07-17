@@ -2,14 +2,36 @@
 
 このページは、IP MultiViewer の設定保存場所、Desktop設定項目、Server / Agent のenvをまとめたリファレンスです。通常の操作手順は [Settings画面の使い方](/app/settings-window) を先に読んでください。
 
-## Desktopの設定保存場所
+## Desktopの設定・ログ保存場所
 
-| 種類 | 場所 |
+正式Windows appは設定とログを次の1組へ保存します。
+
+| 種類 | path |
 | --- | --- |
 | local config | `C:\ProgramData\IPMultiViewer\config\local-config.json` |
 | desktop log | `C:\ProgramData\IPMultiViewer\logs\desktop.log` |
 
-`local-config.json` には、stream URL、server URL、client token、alert履歴が含まれることがあります。外部に渡す前に実値を消してください。
+preview版の移行元として、同じconfig directoryに`local-config.next.json`が残っている場合があります。preview configが正式configより新しい、または正式configがまだない場合、起動時にpreview内容を読み込み、`local-config.json`へ昇格します。移行元の`local-config.next.json`は変更・削除しません。以後の通常保存は`local-config.json`だけを更新します。
+
+configには、stream URL、server URL、client token、alert履歴が含まれることがあります。外部に渡す前に実値を消してください。
+
+Desktopはconfig保存をcoalescing付きbackground writerへ渡し、映像描画のUI threadでfile置換を待たないようにします。alert履歴は`open` / `acknowledged` / `snoozed`を全件保持し、`resolved` / `ignored`は更新時刻が新しい1,000件をconfigへ保持します。既存configがこの上限を超える初回読込時は、整理前の全configを同じdirectoryへ次の名前で1回だけcopyします。
+
+```text
+local-config.history-before-retention.json
+```
+
+この退避fileにもcredentialやtokenが含まれる可能性があります。不要になったかを確認するまでは削除せず、config本体と同じアクセス制御で保管してください。
+
+### 保存先をenvで変える
+
+| env | 用途 |
+| --- | --- |
+| `IPMV_DATA_DIR` / `IPMULTIVIEWER_DATA_DIR` | `config`と`logs`の親directory |
+| `IPMV_CONFIG_DIR` / `IPMULTIVIEWER_CONFIG_DIR` | config directoryだけを上書き |
+| `IPMV_LOG_DIR` / `IPMULTIVIEWER_LOG_DIR` | log directoryだけを上書き |
+
+envを指定した場合も、正式configは`local-config.json`、logは`desktop.log`です。preview移行元の探索も指定後のconfig directory内で行います。
 
 ## local configの主な項目
 
@@ -18,7 +40,7 @@
 | `streams` | 映像ソース一覧 |
 | `layouts` | 2x2 / 3x3 / 4x4 などのタイル割り当て |
 | `alert_profiles` | 黒画面、フリーズ、無音などの閾値 |
-| `alert_history` | local alert履歴 |
+| `alert_history` | local alert履歴。activeは全件、terminalは新しい1,000件を保持 |
 | `active_layout_id` | 現在選択中のlayout |
 | `global_mute` | 全体mute |
 | `alert_sound_enabled` | alert音の有効/無効 |
@@ -27,6 +49,7 @@
 | `client_name` | 端末名 |
 | `client_token` | Server接続token |
 | `server_url` | Server sync先URL |
+| `audio_meter_mode` | メーター表示。`vu`または`peak`。不明値は`vu`に正規化 |
 
 Import / Export でこの設定を移動できます。複数端末で共有する場合は、credentialを含むURLやtokenの扱いを先に決めてください。
 
